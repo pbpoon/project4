@@ -1,0 +1,70 @@
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="product_block_form_view">
+            <field name="name">product block form</field>
+            <field name="model">product.block</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label class="oe_edit_only" for="name"/>
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <field name="quarry_id"/>
+                            <field name="batch_id"/>
+                        </group>
+                        <notebook>
+                            <page string="资料">
+                                <group>
+                                    <field name="weight"/>
+                                    <field name="m3"/>
+                                    <field name="SG"/>
+
+                                </group>
+                                <group>
+                                    <field name="long"/>
+                                    <field name="width"/>
+                                    <field name="height"/>
+                                </group>
+                            </page>
+                            <page string="成本计算">
+                                <group>
+                                    <field name="cost_qty"/>
+                                    <field name="cost_uom"/>
+                                </group>
+                                <group class="oe_edit_only">
+                                    <field name="cost_by"/>
+                                    <field name="cost_unit_price"/>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="activity_ids" widget="mail_activity"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="product_block_action_window">
+            <field name="name">荒料资料</field>
+            <field name="res_model">product.block</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Top menu item -->
+        <menuitem name="产品" id="project4_menu_root"/>
+        <!-- menu categories -->
+        <menuitem name="产品" id="product_menu_sidebar" parent="project4_menu_root"/>
+        <menuitem name="荒料编号" id="product_menu_list" parent="product_menu_sidebar"
+                  action="product_block_action_window"/>
+
+    </data>
+</odoo>

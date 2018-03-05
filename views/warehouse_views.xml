@@ -1,0 +1,58 @@
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="stock_warehouse_form_view">
+            <field name="name">仓库</field>
+            <field name="model">stock.warehouse</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <div class="oe_title">
+                            <label class="oe_edit_only" for="name"/>
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <field name="partner_id"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="stock_location_tree_view" model="ir.ui.view">
+            <field name="name">库存位置列表</field>
+            <field name="model">stock.location</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="complete_name"/>
+                    <field name="usage"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="stock_warehouse_action_window">
+            <field name="name">仓库资料</field>
+            <field name="res_model">stock.warehouse</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="stock_location_action_window">
+            <field name="name">库存位置资料</field>
+            <field name="res_model">stock.location</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- Top menu item -->
+        <menuitem name="库存" id="stock_menu_root"/>
+        <!-- menu categories -->
+        <menuitem name="设置" id="setting_menu_sidebar" parent="stock_menu_root"/>
+        <menuitem name="仓库" id="warehouse_menu_list" parent="setting_menu_sidebar"
+                  action="stock_warehouse_action_window"/>
+        <menuitem name="库存位置" id="location_menu_list" parent="setting_menu_sidebar"
+                  action="stock_location_action_window"/>
+
+    </data>
+</odoo>

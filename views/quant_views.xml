@@ -1,0 +1,55 @@
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="quant_search_view">
+            <field name="name">quant search</field>
+            <field name="model">stock.quant</field>
+            <field eval="10" name="priority"/>
+            <field name="arch" type="xml">
+                <search string="quant">
+                    <field name="block_id"/>
+                    <field name="product_id"/>
+                    <field name="location_id"/>
+                    <group expand='0' string='Filters'>
+                        <filter name="available" string="在库" domain="[('pcs', '&gt;', '0')]"/>
+                        <separator/>
+                    </group>
+                    <group expand="0" string="Group by...">
+                        <filter string='位置' name="locationgroup" domain="[]" context="{'group_by': 'location_id'}"/>
+                        <filter string='荒料编号' name="blockgroup" domain="[]" context="{'group_by': 'block_id'}"/>
+                        <filter string='产品' name="productgroup" domain="[]" context="{'group_by': 'product_id'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="quant_tree_view">
+            <field name="name">库存框明细</field>
+            <field name="model">stock.quant</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false" delete="false">
+                    <field name="block_id"/>
+                    <field name="product_id"/>
+                    <field name="location_id"/>
+                    <field name="pcs"/>
+                    <field name="part"/>
+                    <field name="qty"/>
+                    <field name="uom"/>
+                </tree>
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="quant_action_window">
+            <field name="name">库存明细</field>
+            <field name="res_model">stock.quant</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Top menu item -->
+        <menuitem name="库存" id="quant_menu_sidebar" parent="stock_menu_root"/>
+        <menuitem name="库存明细" id="quant_menu_list" parent="quant_menu_sidebar"
+                  action="quant_action_window"/>
+    </data>
+</odoo>

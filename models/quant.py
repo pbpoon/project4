@@ -40,10 +40,11 @@ class Quant(models.Model):
     def _get(self, product_id, location_id, strict=False):
         domain = [('product_id', '=', product_id.id)]
         if strict:
-            domain.extend(('location_id', '=', location_id.id))
+            domain.append(('location_id', '=', location_id.id))
         else:
-            domain.extend(('location_id', 'child_of', location_id.id))
-        return self.search(domain)
+            domain.append(('location_id', 'child_of', location_id.id))
+        res = self.search(domain)
+        return res
 
     @api.model
     def _update_available(self, product_id, location_id, pcs, slab_ids=None):
@@ -62,6 +63,7 @@ class Quant(models.Model):
             quant.write(vals)
             if quant.pcs == 0:
                 quants.unlink()
+            break
         else:
             if pcs <= 0:
                 raise exceptions.ValidationError('对应新入库的数量不能为负数或零!')

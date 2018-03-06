@@ -52,6 +52,51 @@
             </field>
         </record>
 
+        <record model="ir.ui.view" id="product_product_form_view">
+            <field name="name">产品类型</field>
+            <field name="model">product.product</field>
+            <field name="arch" type="xml">
+                <form>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="compute_name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="block_id"/>
+                            <field name="type"/>
+                            <field name="uom"/>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="category_action_window">
+            <field name="name">品种分类</field>
+            <field name="res_model">product.category</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="quarry_action_window">
+            <field name="name">矿口资料</field>
+            <field name="res_model">product.quarry</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <record model="ir.actions.act_window" id="batch_action_window">
+            <field name="name">批次资料</field>
+            <field name="res_model">product.batch</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+        <record model="ir.actions.act_window" id="uom_action_window">
+            <field name="name">计量单位</field>
+            <field name="res_model">product.uom</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
         <!-- actions opening views on models -->
         <record model="ir.actions.act_window" id="product_block_action_window">
             <field name="name">荒料资料</field>
@@ -63,8 +108,17 @@
         <menuitem name="产品" id="project4_menu_root"/>
         <!-- menu categories -->
         <menuitem name="产品" id="product_menu_sidebar" parent="project4_menu_root"/>
+        <menuitem name="产品基础资料" id="product_info_menu_sidebar" parent="project4_menu_root"/>
         <menuitem name="荒料编号" id="product_menu_list" parent="product_menu_sidebar"
                   action="product_block_action_window"/>
+        <menuitem name="品种" id="category_menu_list" parent="product_info_menu_sidebar"
+                  action="category_action_window"/>
+        <menuitem name="矿口" id="quarry_menu_list" parent="product_info_menu_sidebar"
+                  action="quarry_action_window"/>
+        <menuitem name="批次" id="batch_menu_list" parent="product_info_menu_sidebar"
+                  action="batch_action_window"/>
+        <menuitem name="计量单位" id="uom_menu_list" parent="product_info_menu_sidebar"
+                  action="uom_action_window"/>
 
     </data>
 </odoo>

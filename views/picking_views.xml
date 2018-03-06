@@ -1,5 +1,15 @@
 <odoo>
     <data>
+        <record model="ir.ui.view" id="stock_picking_form_view">
+            <field name="name">库存作业类型</field>
+            <field name="model">stock.picking.type</field>
+            <field name="arch" type="xml">
+                <form>
+                    <field name="name"/>
+
+                </form>
+            </field>
+        </record>
         <!-- explicit list view definition -->
         <record model="ir.ui.view" id="stock_picking_form_view">
             <field name="name">库存作业单</field>
@@ -71,16 +81,7 @@
             </field>
         </record>
 
-        <!--<record id="stock_location_tree_view" model="ir.ui.view">-->
-        <!--<field name="name">作业类型列表</field>-->
-        <!--<field name="model">stock.picking.type</field>-->
-        <!--<field name="arch" type="xml">-->
-        <!--<tree>-->
-        <!--<field name="name"/>-->
-        <!--&lt;!&ndash;<field name="usage"/>&ndash;&gt;-->
-        <!--</tree>-->
-        <!--</field>-->
-        <!--</record>-->
+
         <record model="ir.actions.act_window" id="picking_action_window">
             <field name="name">作业操作</field>
             <field name="res_model">stock.picking</field>
@@ -106,7 +107,7 @@
         <!-- menu categories -->
         <menuitem name="库存作业" id="picking_menu_sidebar" parent="stock_menu_root"/>
 
-        <menuitem name="作业单" id="location_menu_list" parent="picking_menu_sidebar"
+        <menuitem name="作业单" id="picking_menu_list" parent="picking_menu_sidebar"
                   action="picking_action_window"/>
 
     </data>

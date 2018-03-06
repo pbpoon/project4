@@ -152,7 +152,6 @@ class Product(models.Model):
                           store=True)
     package_list_visible = fields.Boolean('是否显示码单', compute='_compute_package_list_visible',
                                           readonly=True, store=True)
-    location_id = fields.Many2one('stock.location', '库存位置', readonly=True)
 
     # @api.depends('type')
     # def _compute_uom(self):
@@ -209,7 +208,6 @@ class ProductSlab(models.Model):
     quant_id = fields.Many2one('stock.quant', '库存框', help='查库存地址')
     # location_id = fields.Many2one('stock.location', 'Location', readonly=True)
     m2 = fields.Float('面积', compute='_compute_total')
-    location_id = fields.Many2one('stock.location', '库存位置', readonly=True)
 
     @api.depends('long', 'height', 'kl1', 'kh1', 'kl2', 'kh2')
     @api.multi

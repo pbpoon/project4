@@ -2,6 +2,9 @@
 <odoo>
     <data>
 
+                <!--
+    Resource: stock.location
+    -->
         <record id="stock_location_locations" model="stock.location">
             <field name="name">Physical Locations</field>
             <field name="usage">view</field>
@@ -57,13 +60,40 @@
             <field name="usage">customer</field>
             <field name="company_id"></field>
         </record>
-        
+
         <record id="stock_location_inter_wh" model="stock.location">
             <field name="name">Inter Company Transit</field>
             <field name="location_id" ref="stock_location_locations_virtual"/>
             <field name="usage">transit</field>
             <field name="company_id"></field>
         </record>
+
+
+        <!--<record forcecreate="True" id="property_stock_supplier" model="ir.property">-->
+
+            <!--<field name="name">property_stock_supplier</field>-->
+
+            <!--<field name="fields_id" search="[('model','=','res.partner'),('name','=','property_stock_supplier')]"/>-->
+
+            <!--<field eval="'stock.location,'+str(stock_location_suppliers)" name="value"/>-->
+        <!--</record>-->
+
+
+        <!--<record forcecreate="True" id="property_stock_customer" model="ir.property">-->
+            <!--<field name="name">property_stock_customer</field>-->
+            <!--<field name="fields_id" search="[('model','=','res.partner'),('name','=','property_stock_customer')]"/>-->
+            <!--<field eval="'stock.location,'+str(stock_location_customers)" name="value"/>-->
+        <!--</record>-->
+        <!--<record forcecreate="True" id="property_stock_inventory" model="ir.property">-->
+            <!--<field name="name">property_stock_inventory</field>-->
+            <!--<field name="fields_id" search="[('model','=','product.template'),('name','=','property_stock_inventory')]"/>-->
+            <!--<field eval="'stock.location,'+str(location_inventory)" name="value"/>-->
+        <!--</record>-->
+        <!--<record forcecreate="True" id="property_stock_production" model="ir.property">-->
+            <!--<field name="name">property_stock_production</field>-->
+            <!--<field name="fields_id" search="[('model','=','product.template'),('name','=','property_stock_production')]"/>-->
+            <!--<field eval="'stock.location,'+str(location_production)" name="value"/>-->
+        <!--</record>-->
 
     </data>
 </odoo>

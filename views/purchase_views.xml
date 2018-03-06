@@ -170,6 +170,11 @@
 
         <menuitem name="采购" id="purchase_menu_root"/>
         <menuitem name="采购单" id="purchase_sidebar" parent="purchase_menu_root"/>
+        <menuitem name="业务伙伴" id="partner_info_sidebar" parent="purchase_menu_root"/>
+
+
+        <menuitem name="供应商" id="partner_menu_list" parent="partner_info_sidebar"
+                  action="base.action_partner_supplier_form"/>
 
         <menuitem name="导入采购尺码单" id="product_block_import_order_list" parent="purchase_sidebar"
                   action="purchase_product_block_import_order_action_window"/>

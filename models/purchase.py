@@ -34,7 +34,7 @@ class PurchaseOrder(models.Model):
     state = fields.Selection((('draft', 'Draft'), ('confirm', 'Confirm'), ('done', 'Done')), 'Status', readonly=True,
                              default='draft', index=True, track_visibility='onchange')
     order_line_ids = fields.One2many('purchase.order.line', 'order_id', string='明细行')
-    partner_id = fields.Many2one('res.partner', '供应商', required=True)  # 后面设置domain
+    partner_id = fields.Many2one('res.partner', '供应商', required=True, domain=[('supplier', '=', True)])  # 后面设置domain
 
     handler_id = fields.Many2one('res.partner', '经办人', default=lambda self: self.env.user)
     cost_money = fields.Selection(selection=COST_MONEY_SELECTION, string='结算货币',
@@ -52,12 +52,26 @@ class PurchaseOrder(models.Model):
     picking_ids = fields.Many2many('stock.picking', string='库存作业单', compute='_compute_picking', copy=False, store=True)
     picking_type_id = fields.Many2one('stock.picking.type', '作业类型', required=True)
 
+    @api.model
+    def create(self, vals):
+        vals['name'] = self.env['ir.sequence'].next_by_code('purchase.order') or _('New')
+        return super(PurchaseOrder, self).create(vals)
+
     @api.multi
     def _compute_total(self):
         for record in self:
             record.total_count = len(record.order_line_ids)
             record.total_qty = sum(record.mapped('order_line_ids.qty'))
             record.total_amount = sum(record.mapped('order_line_ids.amount'))
+
+    @api.onchange('partner_id')
+    def onchange_partner(self):
+        if not self.currency_id:
+            if self.partner_id.currency_id:
+                currency_id = self.partner_id.currency_id.id
+            else:
+                currency_id = self.env.user.company_id.currency_id.id
+            self.currency_id = currency_id if currency_id else False
 
     @api.onchange('product_block_import_order_id')
     def onchange_import_product_line_id(self):

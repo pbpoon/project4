@@ -10,6 +10,7 @@ class Warehouse(models.Model):
     _description = '仓库'
 
     name = fields.Char('名称', required=True, index=True)
+    code = fields.Char('缩写名称', required=True, size=5, help="一般采用英文字母")
     company_id = fields.Many2one(
         'res.company', 'Company', default=lambda self: self.env['res.company']._company_default_get('stock.inventory'),
         index=True, readonly=True, required=True,
@@ -23,8 +24,7 @@ class Warehouse(models.Model):
     @api.model
     def create(self, vals):
         # create view location for warehouse then create all locations
-        loc_vals = {'usage': 'view'}
-        # 'name': _(vals.get('code')),
+        loc_vals = {'usage': 'view', 'name': _(vals.get('code'))}
         # 'location_id': self.env.ref('stock.stock_location_locations').id}
         if vals.get('company_id'):
             loc_vals['company_id'] = vals.get('company_id')
@@ -127,13 +127,30 @@ class PickingType(models.Model):
     _description = '作业类型'
 
     name = fields.Char('作业名称', required=True)
-    code = fields.Char('编码', required=True)
-    default_location_src_id = fields.Many2one('stock.location', string='默认源库位置')
-    default_location_dest_id = fields.Many2one('stock.location', string='默认目标库位置')
+    code = fields.Selection([('incoming', 'Vendors'), ('outgoing', 'Customers'), ('internal', 'Internal')],
+                            'Type of Operation', required=True)
+    default_location_src_id = fields.Many2one('stock.location', string='默认源库位置', store=True)
+    default_location_dest_id = fields.Many2one('stock.location', string='默认目标库位置', store=True)
     warehouse_id = fields.Many2one('stock.warehouse', string='仓库')
     is_production = fields.Boolean('生产作业', default=False)
     orig_product_type = fields.Many2one('product.type', '原材料类型')
     product_type = fields.Many2one('product.type', '成品类型')
+
+    @api.onchange('code')
+    def onchange_picking_code(self):
+        if self.code == 'incoming':
+            self.default_location_src_id = self.env.ref('project4.stock_location_suppliers').id
+            self.default_location_dest_id = self.warehouse_id.lot_stock_id.id if self.warehouse_id else False
+        elif self.code == 'outgoing':
+            self.default_location_src_id = self.warehouse_id.lot_stock_id.id if self.warehouse_id else False
+            self.default_location_dest_id = self.env.ref('project4.stock_location_customers').id
+
+    @api.onchange('warehouse_id')
+    def onchange_warehouse_id(self):
+        if self.warehouse_id:
+            if not self.code:
+                return
+            self.onchange_picking_code()
 
 
 class Picking(models.Model):
@@ -155,6 +172,12 @@ class Picking(models.Model):
         string='Status', readonly=True, default='draft')
     order_line_ids = fields.One2many('stock.picking.line', 'picking_id', '作业明细行')
 
+    @api.onchange('picking_type_id', 'partner_id')
+    def onchange_picking_type_id(self):
+        if self.picking_type_id:
+            self.default_location_src_id = self.picking_type_id.default_location_src_id.id
+            self.default_location_dest_id = self.picking_type_id.default_location_dest_id.id
+
     @api.multi
     def _compute_state(self):
         for r in self:
@@ -165,6 +188,7 @@ class Picking(models.Model):
     def action_done(self):
         for record in self:
             record.move_ids._action_done()
+            record.write({'state': 'done'})
 
     @api.multi
     def action_confirm(self):
@@ -229,7 +253,6 @@ class PickingLine(models.Model):
             'location_id': self.location_id.id,
             'location_dest_id': self.location_dest_id.id,
             'picking_line_id': self.id,
-            'picking_id': self.picking_id.id,
             'pcs': self.pcs,
             'qty': self.qty,
         }
@@ -260,12 +283,11 @@ class StockMove(models.Model):
 
     sequence = fields.Integer('序号', default=10)
     picking_line_id = fields.Many2one('stock.picking.line', '作业单明细行', required=True, readonly=True)
-    picking_id = fields.Many2one('stock.picking', '作业单', related='picking_line_id.picking_id', required=True,
+    picking_id = fields.Many2one('stock.picking', '作业单', related='picking_line_id.picking_id', store=True,
                                  readonly=True)
     orig_move_id = fields.Many2one('stock.move', string='源库存移动')
-    location_id = fields.Many2one('stock.location', string='库存位置', related='picking_line_id.location_id', store=True)
-    location_dest_id = fields.Many2one('stock.location', string='目标库位置', related='picking_line_id.location_dest_id',
-                                       store=True)
+    location_id = fields.Many2one('stock.location', string='库存位置', readonly=True)
+    location_dest_id = fields.Many2one('stock.location', string='目标库位置', readonly=True)
     product_id = fields.Many2one('product.product', string='产品', required=True)
     pcs = fields.Integer('件数', required=True)
     part = fields.Integer('夹数', compute='_compute_part')
@@ -279,7 +301,7 @@ class StockMove(models.Model):
     @api.depends('slab_ids')
     def _compute_part(self):
         for r in self:
-            r.part = len(set(r.slab_ids.part_num))
+            r.part = len(set(r.slab_ids.mapped('part_num')))
 
     @api.multi
     def _action_done(self):

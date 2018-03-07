@@ -26,6 +26,7 @@
     'data': [
         # 'security/ir.model.access.csv',
         'data/stock_data.xml',
+        'data/uom_data.xml',
         'data/ir_sequence_data.xml',
 
         'views/product_views.xml',
@@ -33,6 +34,7 @@
         'views/warehouse_views.xml',
         'views/picking_views.xml',
         'views/quant_views.xml',
+        'views/invoice_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

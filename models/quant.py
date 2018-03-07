@@ -15,7 +15,7 @@ class Quant(models.Model):
                                   required=True)
     pcs = fields.Integer('件数')
     part = fields.Integer('夹数', compute='_compute_qty', store=True)
-    qty = fields.Float('数量', required=True, readonly=True, compute='_compute_qty', store=True)
+    qty = fields.Float('数量', readonly=True, compute='_compute_qty', store=True)
     uom = fields.Many2one('product.uom', '单位', related='product_id.uom', store=True, readonly=True)
     slab_ids = fields.One2many('product.slab', 'quant_id', string='板材')
     in_date = fields.Datetime('入库日期', readonly=True)

@@ -1,0 +1,104 @@
+<odoo>
+    <data>
+        <!--<record model="ir.ui.view" id="stock_picking_form_view">-->
+        <!--<field name="name">款项类型</field>-->
+        <!--<field name="model">invoice.type</field>-->
+        <!--<field name="arch" type="xml">-->
+        <!--<form>-->
+        <!--<field name="name"/>-->
+
+        <!--</form>-->
+        <!--</field>-->
+        <!--</record>-->
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="invoice_form_view">
+            <field name="name">账单</field>
+            <field name="model">invoice.order</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_confirm" type="object" string="Confirm"/>
+                        <button name="action_done" type="object" string="Done"/>
+                        <field name="state" widget="statusbar" statusbar_visible="Draft,Confirm,Done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <label class="oe_edit_only" for="name"/>
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="partner_id"/>
+                                <!--<field name="create_date"/>-->
+                                <field name="date_due"/>
+                                <field name="finish"/>
+                            </group>
+                            <group>
+                                <field name="invoice_type_id"/>
+                                <field name="code"/>
+                            </group>
+                            <group>
+                                <field name="currency_id"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="明细行">
+                                <field name="order_line_ids">
+                                    <tree editable="bottom">
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="name"/>
+                                        <field name="product_id"/>
+                                        <field name="qty"/>
+                                        <field name="uom"/>
+                                        <field name="unit_price"/>
+                                        <field name="amount" readonly="1"/>
+                                        <field name="currency_id"/>
+                                    </tree>
+                                </field>
+                                <group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total">
+                                <field name="amount" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                                <div class="oe_subtotal_footer_separator oe_inline o_td_label">
+                                    <label for="amount_due" />
+                                </div>
+                                <field name="amount_due" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+                            </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record model="ir.actions.act_window" id="invoice_type_action_window">
+            <field name="name">款项类型</field>
+            <field name="res_model">invoice.type</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="picking_invoice_action_window">
+            <field name="name">账单明细</field>
+            <field name="res_model">invoice.order</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <!--<record model="ir.actions.act_window" id="stock_location_action_window">-->
+        <!--<field name="name">库存位置资料</field>-->
+        <!--<field name="res_model">stock.location</field>-->
+        <!--<field name="view_mode">tree,form</field>-->
+        <!--</record>-->
+
+        <!-- Top menu item -->
+        <menuitem name="财务" id="invoice_menu_root"/>
+        <menuitem name="应付账" id="invoice_menu_sidebar" parent="invoice_menu_root"/>
+        <!-- menu categories -->
+        <!--<menuitem name="作业单" id="picking_menu_sidebar" parent="stock_menu_root"/>-->
+
+        <menuitem name="作业单" id="picking_invoice_menu_list" parent="invoice_menu_root"
+                  action="picking_invoice_action_window"/>
+
+    </data>
+</odoo>

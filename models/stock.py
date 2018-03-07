@@ -135,6 +135,7 @@ class PickingType(models.Model):
     is_production = fields.Boolean('生产作业', default=False)
     orig_product_type = fields.Many2one('product.type', '原材料类型')
     product_type = fields.Many2one('product.type', '成品类型')
+    invoice_type_id = fields.Many2one('invoice.type', '账单类型')
 
     @api.onchange('code')
     def onchange_picking_code(self):
@@ -171,6 +172,8 @@ class Picking(models.Model):
         selection=(('draft', 'Draft'), ('waiting', 'Waiting'), ('confirm', 'Confirm'), ('done', 'Done')),
         string='Status', readonly=True, default='draft')
     order_line_ids = fields.One2many('stock.picking.line', 'picking_id', '作业明细行')
+    order_line2_ids = fields.One2many('stock.picking.line2', 'picking_id', '作业明细行2')
+    invoice_id = fields.One2many('invoice.order', 'picking_id', '账单')
 
     @api.onchange('picking_type_id', 'partner_id')
     def onchange_picking_type_id(self):
@@ -188,14 +191,29 @@ class Picking(models.Model):
     def action_done(self):
         for record in self:
             record.move_ids._action_done()
+            record._create_invoice()
             record.write({'state': 'done'})
 
     @api.multi
     def action_confirm(self):
-        self.ensure_one()
-        for line in self.order_line_ids:
-            line._action_confirm()
+        self.order_line_ids._action_confirm()
         self.write({'state': 'confirm'})
+
+    def _prepare_invoice(self):
+        return {
+            'picking_id': self.id,
+            'partner_id': self.partner_id.id,
+            'invoice_type_id': self.picking_type_id.invoice_type_id.id,
+            'currency_id': self.env.user.company_id.currency_id.id,
+        }
+
+    @api.multi
+    def _create_invoice(self):
+        for record in self:
+            if record.picking_type_id.invoice_type_id:
+                vals = record._prepare_invoice()
+                invoice = self.env['invoice.order'].create(vals)
+                record.order_line_ids._create_invoice_line(invoice)
 
 
 class PickingLine(models.Model):
@@ -210,7 +228,7 @@ class PickingLine(models.Model):
     part = fields.Integer('夹数', compute='_compute_qty', store=True)
     pcs = fields.Integer('件数', compute='_compute_qty', inverse='_set_pcs', store=True)
     reality_pcs = fields.Integer('实际件数')
-    qty = fields.Float('数量', required=True, readonly=True, compute='_compute_qty', store=True)
+    qty = fields.Float('数量', readonly=True, compute='_compute_qty', store=True)
     uom = fields.Many2one('product.uom', '单位', related='product_id.uom', readonly=True, store=True)
     package_list_id = fields.Many2one('package.list', '码单')
     unit_price = fields.Float('单价')
@@ -220,6 +238,7 @@ class PickingLine(models.Model):
         selection=(('draft', 'Draft'), ('waiting', 'Waiting'), ('confirm', 'Confirm'), ('done', 'Done')),
         string='Status', readonly=True, default='draft', related='picking_id.state', store=True)
     purchase_line_id = fields.Many2one('purchase.order.line', '采购订单行', readonly=True)
+    invoice_line_ids = fields.One2many('invoice.order.line', 'picking_line_id', '账单行')
 
     @api.depends('qty', 'unit_price')
     def _compute_total(self):
@@ -272,9 +291,35 @@ class PickingLine(models.Model):
             move.write(vals)
 
     @api.multi
-    def _action_confirm(self):
+    def _prepare_invoice_line(self, invoice):
         self.ensure_one()
-        self._create_stock_move()
+        return {
+            'product_id': self.product_id.id,
+            'qty': self.qty,
+            'uom': self.uom.id,
+            'unit_price': self.unit_price,
+            'currency_id': self.env.user.company_id.currency_id.id,
+            'picking_line_id': self.id,
+            'order_id': invoice.id,
+        }
+
+    @api.multi
+    def _create_invoice_line(self, invoice):
+        invoice_lines = invoice_line = self.env['invoice.order.line']
+        for record in self:
+            vals = record._prepare_invoice_line(invoice)
+            invoice_lines |= invoice_line.create(vals)
+        return invoice_lines
+
+    @api.multi
+    def _action_confirm(self):
+        for record in self:
+            record._create_stock_move()
+
+
+class PickingLine2(models.Model):
+    _name = 'stock.picking.line2'
+    _inherit = 'stock.picking.line'
 
 
 class StockMove(models.Model):

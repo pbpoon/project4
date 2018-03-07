@@ -59,7 +59,7 @@
                 <form>
                     <div class="oe_title">
                         <h1>
-                            <field name="compute_name"/>
+                            <field name="name"/>
                         </h1>
                     </div>
                     <group>

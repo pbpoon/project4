@@ -142,9 +142,8 @@ class ProductUom(models.Model):
 class Product(models.Model):
     _name = 'product.product'
     _description = '产品'
-    _rec_name = 'compute_name'
 
-    compute_name = fields.Char('产品名称', compute='_compute_name')
+    name = fields.Char('产品名称', compute='_compute_name')
     block_id = fields.Many2one('product.block', '荒料编号', required=True, index=True, ondelete='cascade')
     single_qty = fields.Float('单件数量', compute='_compute_single_qty', store=True)
     type = fields.Selection(PRODUCT_TYPE_SELECTION, '产品类型', required=True)
@@ -164,7 +163,7 @@ class Product(models.Model):
     def _compute_name(self):
         for r in self:
             type_name = dict(PRODUCT_TYPE_SELECTION)[r.type]
-            r.compute_name = '[{}]{}'.format(r.block_id.name, type_name)
+            r.name = '{} / {}'.format(r.block_id.name, type_name)
 
     @api.depends('type')
     def _compute_single_qty(self):

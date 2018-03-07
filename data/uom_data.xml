@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="uom_m2" model="product.uom">
+            <field name="name">m2</field>
+        </record>
+        <record id="uom_m3" model="product.uom">
+            <field name="name">m3</field>
+        </record>
+        <record id="uom_t" model="product.uom">
+            <field name="name">t</field>
+        </record>
+        <record id="uom_che" model="product.uom">
+            <field name="name">车</field>
+        </record>
+        <record id="uom_unit" model="product.uom">
+            <field name="name">个</field>
+        </record>
+    </data>
+</odoo>

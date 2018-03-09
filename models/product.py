@@ -5,7 +5,6 @@ from odoo import models, fields, api
 COST_BY_SELECTION = (
     ('weight', '按重量'),
     ('m3', '按立方'),
-    ('m2', '按平方'),
 )
 PRODUCT_TYPE_SELECTION = [
     ('block', '荒料'),
@@ -61,9 +60,10 @@ class ProductBlock(models.Model):
     cost_unit_price = fields.Float('成本单价')
     SG = fields.Float(related='quarry_id.SG', string='比重')
     cost_qty = fields.Float('计价数量', compute='_compute_qty', store=True, readonly=True)
-    cost_uom = fields.Selection(selection=(('t', 't'), ('m3', 'm3')), string='计价单位', default='t',
-                                compute='_compute_qty',
-                                readonly=True, store=True)
+    cost_uom = fields.Many2one('product.uom', '成本/计价单位', compute='_compute_qty', store=True)
+    # cost_uom = fields.Selection(selection=(('t', 't'), ('m3', 'm3')), string='计价单位', default='t',
+    #                             compute='_compute_qty',
+    #                             readonly=True, store=True)
 
     _sql_constraints = [('name unique', 'unique(name)', u'该荒料名称已存在!')]
 
@@ -72,12 +72,12 @@ class ProductBlock(models.Model):
         for record in self:
             if record.cost_by == 'weight':
                 record.cost_qty = record.weight
-                record.cost_uom = 't'
+                record.cost_uom = self.env.ref('project4.uom_t').id
             else:
                 record.cost_qty = record.m3
-                record.cost_uom = 'm3'
+                record.cost_uom = self.env.ref('project4.uom_m3').id
 
-    @api.depends('long', 'width', 'height')
+    @api.depends('long', 'width', 'height', 'weight')
     def _compute_m3(self):
         for r in self:
             if r.cost_by == 'm3':
@@ -134,9 +134,20 @@ class ProductUom(models.Model):
     name = fields.Char('Name', index=True, required=True, translate=True)
 
 
-# class ProductType(models.Model):
-#     _name = 'product.type'
-#     _description = '产品类型'
+class ProductType(models.Model):
+    _name = 'product.thickness'
+    _description = '产品厚度'
+
+    name = fields.Char('厚度', compute='_compute_name', store=True)
+    thickness = fields.Float('厚度数据', help='单位为:cm', index=True, required=True)
+    SG = fields.Float('每吨对应平方数')
+
+    _sql_constraints = [('unique thickness', 'unique(thickness)', '该厚度数据已经存在!')]
+
+    @api.depends('thickness')
+    def _compute_name(self):
+        for r in self:
+            r.name = "{}cm".format(r.thickness)
 
 
 class Product(models.Model):
@@ -147,23 +158,29 @@ class Product(models.Model):
     block_id = fields.Many2one('product.block', '荒料编号', required=True, index=True, ondelete='cascade')
     single_qty = fields.Float('单件数量', compute='_compute_single_qty', store=True)
     type = fields.Selection(PRODUCT_TYPE_SELECTION, '产品类型', required=True)
-    uom = fields.Many2one('product.uom', '单位', help="This comes from the product form.",
+    uom = fields.Many2one('product.uom', '单位', help="This comes from the product form.", compute='_compute_uom',
                           store=True)
     package_list_visible = fields.Boolean('是否显示码单', compute='_compute_package_list_visible',
                                           readonly=True, store=True)
+    thickness_id = fields.Many2one('product.thickness', '厚度')  # 日后用来计算货物重量
 
-    # @api.depends('type')
-    # def _compute_uom(self):
-    #     uom = self.env['product.uom']
-    #     for r in self:
-    #         if r.type != 'block':
-    #             r.uom = uom.search([('name', '=', 'm2')])
+    @api.depends('type')
+    def _compute_uom(self):
+        for r in self:
+            if r.type != 'block':
+                r.uom = self.env.ref('project4.uom_m2').id
+            else:
+                r.uom = r.block_id.cost_uom.id
 
-    @api.depends('block_id.name', 'type')
+    @api.depends('block_id.name', 'type', 'thickness_id.name')
     def _compute_name(self):
         for r in self:
             type_name = dict(PRODUCT_TYPE_SELECTION)[r.type]
-            r.name = '{} / {}'.format(r.block_id.name, type_name)
+            if r.thickness_id:
+                name = '{} / {}{}'.format(r.block_id.name, r.thickness_id.name, type_name)
+            else:
+                name = '{} / {}'.format(r.block_id.name, type_name)
+            r.name = name
 
     @api.depends('type')
     def _compute_single_qty(self):

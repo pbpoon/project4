@@ -24,12 +24,26 @@ class Quant(models.Model):
     reserved_slab_ids = fields.Float('预留板材')
 
     in_date = fields.Datetime('入库日期', readonly=True)
+    available_pcs = fields.Integer('可操作件数', compute='_compute_available_pcs', search='_available_pcs_search',
+                                   store=True)
 
     _sql_constraints = [('unique_product_location', 'unique (product_id,location_id)', '该位置已有该产品,不能创建同位置同产品的库存框!')]
+
+    def _available_pcs_search(self, name, args=None, operator='ilike', limit=100):
+        if operator == 'like':
+            operator = 'ilike'
+
+        versions = self.search([('name', operator, name)], limit=limit)
+        return versions.name_get()
 
     def _check_product_type(self, product_id, slab_ids=None):
         if product_id.type == 'slab' and slab_ids is None:
             raise exceptions.ValidationError('产品[ {} ]的形态为:板材,没有附带码单.不能对库存操作!')
+
+    @api.depends('pcs', 'reserved_pcs')
+    def _compute_available_pcs(self):
+        for record in self:
+            record.available_pcs = record.pcs - record.reserved_pcs
 
     @api.depends('product_id.type', 'slab_ids')
     def _compute_qty(self):
@@ -72,26 +86,31 @@ class Quant(models.Model):
         reserved_quants = []
         if slab_ids:
             quantity = len(slab_ids.mapped('id')) * -1 if pcs < 0 else len(slab_ids.mapped('id'))
+        else:
+            quantity = pcs
         for quant in quants:
             if quantity > 0:
-                max_reserved_pcs = quant.pcs - quant.reserved_pcs
+                max_reserved_pcs = quant.pcs - int(quant.reserved_pcs)
                 if max_reserved_pcs <= 0:
                     continue
+                reserved_slab_ids = []
                 if slab_ids:
                     quant.reserved_slab_ids = slab_ids & quant.slab_ids
                     slab_ids -= quant.reserved_slab_ids
+                    reserved_slab_ids = quant.mapped('reserved_slab_ids.id')
                 max_reserved_pcs = min(max_reserved_pcs, quantity)
-                quant.reserved_pcs -= max_reserved_pcs
-                reserved_quants.append((quant, max_reserved_pcs, quant.mapped('reserved_slab_ids.id')))
+                quant.reserved_pcs += max_reserved_pcs
+                reserved_quants.append((quant, max_reserved_pcs, reserved_slab_ids))
                 quantity -= max_reserved_pcs
             else:
                 max_reserved_pcs = min(quant.reserved_pcs, abs(quantity))
+                reserved_slab_ids = []
                 if slab_ids:
-                    reserved_slab_ids = quant.reserved_slab_ids
+                    reserved_slab_ids = quant.mapped('reserved_slab_ids.id')
                     quant.reserved_slab_ids -= slab_ids
                     slab_ids -= quant.reserved_slab_ids
                 quant.reserved_pcs -= max_reserved_pcs
-                reserved_quants.append((quant, quantity, reserved_slab_ids.mapped('id')))
+                reserved_quants.append((quant, -quantity, reserved_slab_ids))
                 quantity += max_reserved_pcs
             if quantity == 0:
                 break
@@ -104,7 +123,7 @@ class Quant(models.Model):
         :param location_id: location(record)
         :return: tuple(pcs(int), slabs(list))
         """
-        quants = self.get(product_id, location_id)
+        quants = self._get(product_id, location_id)
         slabs = [quant.mapped('slab_ids.id') for quant in quants]
         pcs = sum(quant.pcs for quant in quants)
         return pcs, slabs

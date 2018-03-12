@@ -243,7 +243,8 @@ class PackageList(models.Model):
     _name = 'package.list'
     _description = '码单'
 
-    block_id = fields.Many2one('product.block', '荒料编号', required=True, index=True, ondelete='cascade')
+    product_id = fields.Many2one('product.product', '产品编号', required=True, index=True, ondelete='cascade')
+    block_id = fields.Many2one('product.block', '荒料编号', related='product_id.block_id')
     qty = fields.Float('数量', compute='_compute_total', store=True, readonly=True)
     part = fields.Integer('夹数', compute='_compute_total', store=True, readonly=True)
     pcs = fields.Integer('件数', compute='_compute_total', store=True, readonly=True)

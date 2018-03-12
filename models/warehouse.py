@@ -103,6 +103,7 @@ class Location(models.Model):
     quant_ids = fields.One2many('stock.quant', 'location_id', '库存框')
     parent_left = fields.Integer('Left Parent', index=1)
     parent_right = fields.Integer('Right Parent', index=1)
+    scrap_location = fields.Boolean('报废位置', default=False)
 
     @api.one
     @api.depends('name', 'location_id.name')
@@ -120,3 +121,19 @@ class Location(models.Model):
             if self.mapped('quant_ids'):
                 raise UserError(_("This location's usage cannot be changed to view as it contains products."))
         return super(Location, self).write(values)
+
+    def should_bypass_reservation(self):
+        self.ensure_one()
+        return self.usage in ('supplier', 'customer', 'inventory', 'production') or self.scrap_location
+
+    def get_child_location(self):
+        self.ensure_one()
+        return self.search([('location_id', 'child_of', self.id)])
+
+    def get_available_product_lst(self):
+        self.ensure_one()
+        product_lst = self.get_child_location().mapped('quant_ids').filtered(lambda r: r.available_pcs > 0).mapped('product_id.id')
+        return product_lst
+
+    def get_all_product_lst(self):
+        self.ensure_one()

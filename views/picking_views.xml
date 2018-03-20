@@ -60,13 +60,13 @@
                 <form>
                     <header>
                         <button name="action_draft" type="object" string="draft"
-                                attrs="{'invisible':[('state','not in',['cancel', 'done'])]}"/>
+                                attrs="{'invisible':[('state','in',['draft','cancel', 'done'])]}"/>
                         <button name="action_waiting" type="object" string="Waiting"
-                                attrs="{'invisible':[('state','not in',['writing', 'done', 'cancel'])]}"/>
+                                attrs="{'invisible':[('state','in',['writing', 'done', 'cancel'])]}"/>
                         <button name="action_confirm" type="object" string="Confirm"
-                                attrs="{'invisible':[('state','not in',['confirm', 'done', 'cancel'])]}"/>
+                                attrs="{'invisible':[('state','in',['confirm', 'done', 'cancel'])]}"/>
                         <button name="action_done" type="object" string="Done"
-                                attrs="{'invisible':[('state','not in',['draft', 'done', 'writing', 'cancel'])]}"/>
+                                attrs="{'invisible':[('state','in',['done', 'writing', 'cancel'])]}"/>
                         <button name="action_cancel" type="object" string="Cancel"
                                 attrs="{'invisible':[('state','not in',['cancel', 'done'])]}"/>
                         <field name="state" widget="statusbar" statusbar_visible="Draft,Waiting,Confirm,Done,Cancel"/>
@@ -97,14 +97,18 @@
                             <page string="明细行">
                                 <field name="order_line_ids"
                                        context="{'default_location_id':default_location_src_id, 'default_location_dest_id':default_location_dest_id,
-                                       'default_code':code}">
+                                       'default_code':code}" attrs="{'readonly':[('state','!=','draft')]}">
                                     <tree editable="bottom">
                                         <field name="sequence" widget="handle"/>
                                         <field name="location_id"/>
                                         <field name="location_dest_id"/>
-                                        <field name="product_id" required="1" options="{'no_create': True}"/>
-                                        <field name="pcs"/>
+                                        <field name="product_id" required="1" options="{'no_create': True}" attrs="{'readonly':[('package_list_id', '!=', False)]}"/>
+                                        <field name="package_list_visible" invisible="1"/>
+                                        <button name="action_show_package_list" string="码单" type="object"
+                                                icon="fa-list" options='{"warn": true}' attrs="{'readonly':[('state', '!=', 'draft')],
+                            'invisible':[('package_list_visible','=',False)]}"/>
                                         <field name="part"/>
+                                        <field name="pcs" attrs="{'readonly':[('package_list_visible', '=', True)]}"/>
                                         <field name="qty"/>
                                         <field name="uom"/>
                                         <field name="package_list_id" invisible="1"/>
@@ -115,16 +119,22 @@
                                     </tree>
                                 </field>
                             </page>
-                            <page string="明细行2"
+                            <page string="产品明细行"
                                   attrs="{'invisible':['|',('state','in',['draft', 'cancel']),('code','!=','production')]}">
                                 <field name="order_line2_ids" context="{'default_location_id':default_location_src_id, 'default_location_dest_id':default_location_dest_id,
-                                       'default_code':code, 'block_ids':block_ids}">
+                                       'default_code':code, 'block_ids':block_ids}"
+                                       attrs="{'readonly':[('state','not in', ['draft', 'waiting'])]}">
                                     <tree editable="bottom">
                                         <field name="sequence" widget="handle"/>
                                         <field name="location_id"/>
                                         <field name="location_dest_id"/>
                                         <field name="block_id" options="{'no_create':True}"/>
                                         <field name="thickness_id"/>
+                                        <field name="package_list_visible" invisible="1"/>
+                                        <button name="action_show_package_list" string="码单" type="object"
+                                                icon="fa-list" options='{"warn": true}'
+                                                attrs="{'readonly':[('state', '!=', 'draft')]}"/>
+                                        <!--'invisible':[('package_list_visible','=',False)]}"/>-->
                                         <field name="pcs"/>
                                         <field name="part"/>
                                         <field name="qty"/>
@@ -136,7 +146,7 @@
                                     </tree>
                                 </field>
                             </page>
-                            <page string="库存移动明细行" attrs="{'invisible':[('state','=','draft')]}">
+                            <page string="库存移动明细行" attrs="{'invisible':[('state','in',['draft','waiting'])]}">
                                 <field name="move_ids">
                                     <tree create="0" edit="0" delete="0">
                                         <field name="sequence" widget="handle"/>

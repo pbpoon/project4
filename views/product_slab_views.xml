@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="product_slab_tree_view" model="ir.ui.view">
+            <field name="name">product.slab.tree</field>
+            <field name="model">product.slab</field>
+            <field name="arch" type="xml">
+                <tree default_order="part_num,sequence">
+                    <field name="product_id" invisible="1"/>
+                    <field name="quant_id" invisible="1"/>
+                    <field name="sequence" widget="handle"/>
+                    <field name="part_num"/>
+                    <field name="num"/>
+                    <field name="long"/>
+                    <field name="height"/>
+                    <field name="kl1"/>
+                    <field name="kh1"/>
+                    <field name="kl2"/>
+                    <field name="kh2"/>
+                    <field name="m2" sum="total"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="product_slab_search_view" model="ir.ui.view">
+            <field name="name">product.slab.scarch</field>
+            <field name="model">product.slab</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="long"/>
+                    <field name="height"/>
+                    <field name="part_num"/>
+                    <group expand="0" string="Group By...">
+                        <filter name="group_product_id" string="夹#" domain="[]" context="{'group_by': 'product_id'}"/>
+                        <filter name="group_part_num" string="产品" domain="[]" context="{'group_by': 'part_num'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="product_slab_action" model="ir.actions.act_window">
+            <field name="name">product slab</field>
+            <field name="res_model">product.slab</field>
+            <field name="view_mode">tree,form</field>
+            <field name="search_view_id" ref="project4.product_slab_search_view"/>
+            <field name="context">{"search_default_group_product_id":True,"search_default_group_part_num":True}</field>
+        </record>
+
+    </data>
+
+</odoo>

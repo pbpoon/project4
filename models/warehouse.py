@@ -135,5 +135,3 @@ class Location(models.Model):
         product_lst = self.get_child_location().mapped('quant_ids').filtered(lambda r: r.available_pcs > 0).mapped('product_id.id')
         return product_lst
 
-    def get_all_product_lst(self):
-        self.ensure_one()

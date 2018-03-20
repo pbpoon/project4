@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="package_list_form_wizard" model="ir.ui.view">
+            <field name="name">package.list.form.wizard</field>
+            <field name="model">package.list.wizard</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="product_id" class="oe_title"/>
+                            </group>
+
+                            <group>
+                                <field name="part" readonly="1"/>
+                                <field name="pcs" readonly="1"/>
+                                <field name="qty" readonly="1"/>
+                            </group>
+                        </group>
+                        <group>
+                            <group>
+                                <group>
+                                    <field name="part_num"/>
+                                    <field name="from_num"/>
+                                    <field name="to_num"/>
+                                    <button name="button_add" string="_Add" type="object" class="btn-primary"/>
+                                </group>
+                                <group>
+                                    <field name="file"/>
+                                    <button name="import_file" string="_Import" type="object" class="btn-primary"/>
+                                </group>
+                            </group>
+
+                            <group col="1">
+                                <group>
+                                    <div class="oe_inline">
+                                            <label for="long"/>
+                                            <field name="long" class="oe_inline"/>
+                                            <label for="height"/>
+                                            <field name="height" class="oe_inline"/>
+                                    </div>
+                                </group>
+                                <group>
+                                    <div class="oe_inline">
+                                        <label for="kl1"/>
+                                        <field name="kl1" class="oe_inline"/>
+                                        <label for="kh1"/>
+                                        <field name="kh1" class="oe_inline"/>
+                                    </div>
+                                </group>
+                                <group>
+                                    <div class="oe_inline">
+                                        <label for="kl2" class="oe_inline"/>
+                                        <field name="kl2" class="oe_inline"/>
+                                        <label for="kh2" class="oe_inline"/>
+                                        <field name="kh2" class="oe_inline"/>
+                                    </div>
+                                </group>
+                            </group>
+                        </group>
+
+                        <field name="slab_ids" widget="many2many_list" context="{'search_default_group_part_num':'1'}"
+                               domain="[('id','in',context['domain_list'])]">
+                            <tree>
+                                <field name="part_num"/>
+                                <field name="product_id" invisible="1"/>
+                                <field name="sequence"/>
+                                <field name="long"/>
+                                <field name="height"/>
+                                <field name="kl1"/>
+                                <field name="kh1"/>
+                                <field name="kl2"/>
+                                <field name="kh2"/>
+                                <field name="m2"/>
+                            </tree>
+                            <!--<search>-->
+                            <!--<field name="part_num"/>-->
+                            <!--<field name="sequence"/>-->
+                            <!--<field name="long"/>-->
+                            <!--<field name="height"/>-->
+                            <!--<field name="kl1"/>-->
+                            <!--<field name="kh1"/>-->
+                            <!--<field name="kl2"/>-->
+                            <!--<field name="kh2"/>-->
+                            <!--<field name="qty"/>-->
+                            <!--</search>-->
+                        </field>
+                    </sheet>
+                    <footer>
+                        <button name="Apply" string="_Apply" type="object" class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_package_list_form_wizard" model="ir.actions.act_window">
+            <field name="name">Package List</field>
+            <field name="res_model">package.list.wizard</field>
+            <field name="type">ir.actions.act_window</field>
+            <!--<field name="src_model">sale.order.line</field>-->
+            <field name="view_type">form</field>
+
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+
+    </data>
+
+</odoo>

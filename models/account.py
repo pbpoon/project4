@@ -5,7 +5,7 @@ from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 INVOICE_STATE = (
-    ('draft', '草稿'), ('confirm', '确认'), ('done', '完成')
+    ('draft', '草稿'), ('confirm', '确认'), ('done', '完成'), ('cancel', '关闭')
 )
 
 
@@ -35,6 +35,7 @@ class InvoiceOrder(models.Model):
     amount_due = fields.Float('未付金额', compute='_compute_amount', store=True)
     payment_ids = fields.One2many('invoice.payment', 'invoice_id', '付款记录')
     picking_id = fields.Many2one('stock.picking', '作业单')
+    sales_order_id = fields.Many2one('sales.order', '销售单')
 
     @api.depends('order_line_ids.amount')
     def _compute_amount(self):
@@ -59,9 +60,11 @@ class InvoiceOrderLine(models.Model):
     qty = fields.Float('数量', required=True)
     uom = fields.Many2one('product.uom', '单位')
     unit_price = fields.Float('单价', required=True)
-    currency_id = fields.Many2one("res.currency", string="Currency", required=True)
+    currency_id = fields.Many2one("res.currency", string="Currency", required=True,
+                                  default=lambda self: self.user.company_id.currency_id.id)
     amount = fields.Float('金额', compute='_compute_amount', inverse='_set_amount')
     picking_line_id = fields.Many2one('stock.picking.line', '作业单明细行', readonly=True)
+    sales_line_id = fields.Many2one('sales.order.line', '销售订单明细行', readonly=True)
 
     @api.depends('desc', 'product_id')
     def _compute_name(self):
@@ -90,11 +93,8 @@ class InvoicePayment(models.Model):
     invoice_id = fields.Many2one('invoice.order', '账单', required=True, readonly=True)
     amount = fields.Float('金额', required=True)
 
-
 # class BankAccount(models.Model):
 #     _name = 'bank.account'
 #     _description = '银行账号'
 #
 #     name = fields.Char('名称', required=True, index=True)
-
-

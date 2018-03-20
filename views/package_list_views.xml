@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="package_list_form" model="ir.ui.view">
+            <field name="name">package.list.form</field>
+            <field name="model">package.list</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <div class="oe_title">
+                                <label for="name"/>
+                                <h1>
+                                    <field name="name"/>
+                                </h1>
+                            </div>
+                            <group>
+                                <field name="product_id"/>
+                            </group>
+
+                            <group string="总数量">
+                                <field name="part"/>
+                                <field name="pcs"/>
+                                <field name="qty"/>
+                            </group>
+                        </group>
+                        <group>
+                            <button string="选择板材" name="choice_slab" type="object"/>
+                            <button string="清除选择" name="clear_slab" type="object"/>
+                        </group>
+                        <field name="slab_ids" widget="many2many_list"
+                               context="{'tree_view_ref':'sale_select_lots.product_slab_tree_view' ,'search_default_group_part_num':True,
+                               'group_by':'part_num'}"
+                               domain="[('product_id', '=',product_id),('id', 'in', context.get('domain_slab_ids'))]">
+                        </field>
+                                                       <!--attrs="{'readonly': ['|', ('state', '=', 'cancel'), ('state', '=', 'done')]}"-->
+
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+
+        <record id="action_package_list_form" model="ir.actions.act_window">
+            <field name="name">Package List</field>
+            <field name="res_model">package.list</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+
+    </data>
+
+</odoo>

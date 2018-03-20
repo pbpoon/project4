@@ -21,7 +21,7 @@ class Quant(models.Model):
 
     reserved_pcs = fields.Integer('预留件数')
     reserved_qty = fields.Float('预留数量', compute='_compute_qty', store=True)
-    reserved_slab_ids = fields.Float('预留板材')
+    reserved_slab_ids =fields.One2many('product.slab', 'reserved_quant_id', string='预留板材')
 
     in_date = fields.Datetime('入库日期', readonly=True)
     available_pcs = fields.Integer('可操作件数', compute='_compute_available_pcs', search='_available_pcs_search',
@@ -80,10 +80,13 @@ class Quant(models.Model):
         :param strict:
         :return: tuple(quant(recordset), pcs(int), slab_ids(list))
         """
+        reserved_quants = []
+
+        if location_id.should_bypass_reservation():
+            return reserved_quants
         self._check_product_type(product_id, slab_ids)
         quants = self._get(product_id, location_id, strict=strict)
         # available = self._get_available(product_id, location_id)
-        reserved_quants = []
         if slab_ids:
             quantity = len(slab_ids.mapped('id')) * -1 if pcs < 0 else len(slab_ids.mapped('id'))
         else:
@@ -124,8 +127,11 @@ class Quant(models.Model):
         :return: tuple(pcs(int), slabs(list))
         """
         quants = self._get(product_id, location_id)
-        slabs = [quant.mapped('slab_ids.id') for quant in quants]
+        slabs = [quant.mapped('slab_ids')-quant.mapped('reserved_slab_ids') for quant in quants][0]
         pcs = sum(quant.pcs for quant in quants)
+        if slabs:
+            slabs = slabs.mapped('id')
+            pcs = len(slabs)
         return pcs, slabs
 
     @api.model

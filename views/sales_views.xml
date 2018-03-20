@@ -1,0 +1,118 @@
+<odoo>
+    <data>
+        <!-- explicit list view definition -->
+        <record model="ir.ui.view" id="sales_order_form_view">
+            <field name="name">销售订单</field>
+            <field name="model">sales.order</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_draft" string="Draft" type="object"/>
+                        <button name="action_confirm" string="Confirm" type="object"/>
+                        <button name="action_done" string="Done" type="object"/>
+                        <field name="state" widget="statusbar" statusbar_visible="Draft,Confirm,Done"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="action_view_picking"
+                                    type="object"
+                                    class="oe_stat_button"
+                                    icon="fa-pencil-square-o"
+                                    attrs="{'invisible': [('picking_count', '=', 0)]}">
+                                <field name="picking_count" widget="statinfo" string="提货记录"/>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1>
+                                <field name="name"/>
+                            </h1>
+                            <field name="delivery_progress" widget="progressbar" string="提货进度"/>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="date"/>
+                                <field name="partner_id"/>
+                            </group>
+                            <group>
+                                <field name="sale_man"/>
+                                <field name="state" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="明细行">
+                                <field name="order_line_ids" context="{'default_warehouse_id': warehouse_id}">
+                                    <tree editable="bottom">
+                                        <field name="package_list_visible" invisible="1"/>
+                                        <field name="sequence" widget="handle"/>
+                                        <field name="name"/>
+                                        <field name="state" invisible="1"/>
+                                        <field name="id" invisible="1"/>
+                                        <field name="product_id" attrs="{'readonly':[('package_list_id', '!=', False)]}" options="{'no_create': True}"/>
+                                        <field name="part"/>
+                                        <field name="pcs" attrs="{'readonly':[('package_list_visible', '=', True)]}"/>
+                                        <field name="qty"/>
+                                        <field name="uom"/>
+                                        <button name="action_show_package_list" string="码单" type="object"
+                                                icon="fa-list" options='{"warn": true}'
+                                                attrs="{'readonly':[('state', '!=', 'draft')], 'invisible':[('package_list_visible', '=', False)]}"/>
+                                        <field name="package_list_id" invisible="1"/>
+                                        <field name="unit_price"/>
+                                        <field name="amount"/>
+                                        <field name="warehouse_id" invisible="1"/>
+                                    </tree>
+                                    <form>
+                                        <group>
+                                            <group>
+                                                <field name="name"/>
+                                                <field name="state" invisible="1"/>
+                                                <field name="order_id" invisible="1" context="{'default_order_id':id}"/>
+                                                <field name="product_id"/>
+                                                <field name="package_list_id" invisible="1"/>
+                                                <button name="action_show_package_list" string="码单" type="object"
+                                                        icon="fa-list" options='{"warn": true}'
+                                                        attrs="{'readonly':[('state', '!=', 'draft')]}"/>
+                                            </group>
+                                            <group>
+                                                <field name="part"/>
+                                                <field name="pcs"/>
+                                                <field name="qty" class="oe_inline"/>
+                                                <field name="uom"/>
+                                            </group>
+                                        </group>
+                                    </form>
+                                </field>
+                            </page>
+                            <page string="其他设置">
+                                <group>
+                                    <group>
+                                        <field name="warehouse_id"/>
+                                        <field name="picking_type_id"/>
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+
+            </field>
+        </record>
+
+        <!-- actions opening views on models -->
+        <record model="ir.actions.act_window" id="sales_order_act_window">
+            <field name="name">销售订单</field>
+            <field name="res_model">sales.order</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <!-- Top menu item -->
+        <menuitem name="销售" id="sales_menu_root"/>
+        <!-- menu categories -->
+        <menuitem name="销售单" id="sales_order_sidebar_menu" parent="sales_menu_root"/>
+        <!--<menuitem name="Menu 2" id="project4.menu_2" parent="project4.menu_root"/>-->
+        <!-- actions -->
+        <menuitem name="销售订单" id="sales_order_list_menu" parent="sales_order_sidebar_menu"
+                  action="sales_order_act_window"/>
+    </data>
+</odoo>

@@ -35,6 +35,11 @@
         'views/picking_views.xml',
         'views/quant_views.xml',
         'views/invoice_views.xml',
+        'views/package_list_views.xml',
+        'views/product_slab_views.xml',
+        'views/sales_views.xml',
+
+        'wizard/package_list_wizard_views.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

@@ -131,7 +131,7 @@ class ProductUom(models.Model):
     _name = 'product.uom'
     _description = '计量单位'
 
-    name = fields.Char('Name', index=True, required=True, translate=True)
+    name = fields.Char('Name', index=True, required=True)
 
 
 class ProductType(models.Model):
@@ -154,7 +154,7 @@ class Product(models.Model):
     _name = 'product.product'
     _description = '产品'
 
-    name = fields.Char('产品名称', compute='_compute_name')
+    name = fields.Char('产品名称', compute='_compute_name', store=True)
     block_id = fields.Many2one('product.block', '荒料编号', required=True, index=True, ondelete='cascade')
     single_qty = fields.Float('单件数量', compute='_compute_single_qty', store=True)
     type = fields.Selection(PRODUCT_TYPE_SELECTION, '产品类型', required=True)
@@ -163,6 +163,8 @@ class Product(models.Model):
     package_list_visible = fields.Boolean('是否显示码单', compute='_compute_package_list_visible',
                                           readonly=True, store=True)
     thickness_id = fields.Many2one('product.thickness', '厚度')  # 日后用来计算货物重量
+
+    _sql_constraints = [('unique_product', 'unique(block_id, type, thickness_id)', '该产品属性完全一样的产品已经存在!')]
 
     @api.depends('type')
     def _compute_uom(self):
@@ -175,6 +177,8 @@ class Product(models.Model):
     @api.depends('block_id.name', 'type', 'thickness_id.name')
     def _compute_name(self):
         for r in self:
+            if not r.id:
+                return
             type_name = dict(PRODUCT_TYPE_SELECTION)[r.type]
             if r.thickness_id:
                 name = '{} / {}{}'.format(r.block_id.name, r.thickness_id.name, type_name)
@@ -222,6 +226,7 @@ class ProductSlab(models.Model):
     part_num = fields.Integer('夹#', default=1)
 
     quant_id = fields.Many2one('stock.quant', '库存框', help='查库存地址')
+    reserved_quant_id = fields.Many2one('stock.quant', '预留库存框', help='查库存地址')
     # location_id = fields.Many2one('stock.location', 'Location', readonly=True)
     m2 = fields.Float('面积', compute='_compute_total')
 
@@ -237,39 +242,3 @@ class ProductSlab(models.Model):
                 k2m2 = record.kl2 * record.kh2 * 0.0001
                 m2 = m2 - k2m2
             record.m2 = m2
-
-
-class PackageList(models.Model):
-    _name = 'package.list'
-    _description = '码单'
-
-    product_id = fields.Many2one('product.product', '产品编号', required=True, index=True, ondelete='cascade')
-    block_id = fields.Many2one('product.block', '荒料编号', related='product_id.block_id')
-    qty = fields.Float('数量', compute='_compute_total', store=True, readonly=True)
-    part = fields.Integer('夹数', compute='_compute_total', store=True, readonly=True)
-    pcs = fields.Integer('件数', compute='_compute_total', store=True, readonly=True)
-    slab_ids = fields.Many2many('product.slab', string='板材')
-
-    @api.depends('slab_ids')
-    def _compute_total(self):
-        for record in self:
-            qty = sum(record.mapped('slab_ids.qty'))
-            part = len(set(record.mapped('slab_ids.part_num')))
-            pcs = len(record.slab_ids)
-            name = '{}/{}夹/{}件/{}m2'.format(record.lot_id.name, part, pcs, qty)
-
-            record.update({
-                'qty': qty,
-                'part': part,
-                'pcs': pcs,
-                'name': name,
-            })
-
-    @api.onchange('slab_ids')
-    def _onchange_slab_ids(self):
-        self.ensure_one()
-        self.update({
-            'qty': sum(self.slab_ids.mapped('qty')),
-            'pcs': len(self.slab_ids),
-            'part': len(set(self.slab_ids.mapped('part_num'))),
-        })
